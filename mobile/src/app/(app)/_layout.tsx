@@ -19,12 +19,12 @@ export default function AppLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: user ? `${user.email}s lista` : "Listan"
+          title: user ? `${user.email}'s list` : "Your list"
         }}
       />
-      <Stack.Screen name="random" options={{ title: "Slumpa" }} />
-      <Stack.Screen name="titles/new" options={{ title: "Ny titel", presentation: "modal" }} />
-      <Stack.Screen name="titles/[id]" options={{ title: "Detaljer" }} />
+      <Stack.Screen name="random" options={{ title: "Random" }} />
+      <Stack.Screen name="titles/new" options={{ title: "New title", presentation: "modal" }} />
+      <Stack.Screen name="titles/[id]" options={{ title: "Details" }} />
     </Stack>
   );
 }

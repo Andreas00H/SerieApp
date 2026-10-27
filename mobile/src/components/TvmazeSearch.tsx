@@ -35,10 +35,10 @@ export default function TvmazeSearch({ onPick }: Props) {
       const data = await api.searchTvmaze(token, q);
       setResults(data.results);
       if (data.results.length === 0) {
-        setError("Inga träffar – prova ett annat sökord");
+        setError("No results – try another search");
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Sökningen misslyckades");
+      setError(err instanceof ApiError ? err.message : "Search failed");
     } finally {
       setLoading(false);
     }
@@ -46,24 +46,24 @@ export default function TvmazeSearch({ onPick }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.heading}>Hämta från TVmaze</Text>
+      <Text style={styles.heading}>Fetch from TVmaze</Text>
       <Text style={styles.hint}>
-        Söker bara serier – filmer skriver du in manuellt.
+        Searches series only – enter movies manually.
       </Text>
       <View style={styles.row}>
         <View style={styles.field}>
           <Field
-            label="Sök serie"
+            label="Search series"
             inputProps={{
               value: query,
               onChangeText: setQuery,
-              placeholder: "t.ex. Breaking Bad",
+              placeholder: "e.g. Breaking Bad",
               returnKeyType: "search",
               onSubmitEditing: search
             }}
           />
         </View>
-        <Button label="Sök" onPress={search} loading={loading} disabled={!query.trim()} style={styles.button} />
+        <Button label="Search" onPress={search} loading={loading} disabled={!query.trim()} style={styles.button} />
       </View>
       {loading ? <ActivityIndicator color={colors.accent} style={styles.spinner} /> : null}
       {error && !loading ? <Text style={styles.error}>{error}</Text> : null}
@@ -84,14 +84,14 @@ export default function TvmazeSearch({ onPick }: Props) {
                 <Text style={styles.resultName}>{result.name}</Text>
                 <Text style={styles.resultMeta}>
                   {result.premiered ? `${result.premiered.slice(0, 4)} · ` : ""}
-                  {result.genres.slice(0, 3).join(", ") || "okänd genre"}
+                  {result.genres.slice(0, 3).join(", ") || "unknown genre"}
                 </Text>
               </View>
             </Pressable>
           ))}
         </ScrollView>
       ) : null}
-      <Text style={styles.credit}>Data från TVmaze (CC BY-SA)</Text>
+      <Text style={styles.credit}>Data from TVmaze (CC BY-SA)</Text>
     </View>
   );
 }

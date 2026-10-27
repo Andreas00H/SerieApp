@@ -22,14 +22,14 @@ export default function NewTitleScreen() {
       await api.createTitle(token, input);
       router.back();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Kunde inte spara titeln");
+      setError(err instanceof ApiError ? err.message : "Could not save the title");
     } finally {
       setSubmitting(false);
     }
   }
 
   if (!token) {
-    return <StateView kind="error" message="Du måste vara inloggad" />;
+    return <StateView kind="error" message="You must be signed in" />;
   }
 
   return (
@@ -41,7 +41,7 @@ export default function NewTitleScreen() {
         <TitleForm
           submitting={submitting}
           error={error}
-          submitLabel="Spara titel"
+          submitLabel="Save title"
           onSubmit={submit}
         />
         <View style={{ height: 40 }} />

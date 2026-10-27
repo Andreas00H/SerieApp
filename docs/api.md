@@ -1,7 +1,7 @@
 # API-kontrakt
 
 Bas-URL: `EXPO_PUBLIC_API_URL` i `mobile/.env` (t.ex. `https://din-server.sslip.io`).
-Alla svar är JSON. Alla fel har formen `{ "error": "meddelande på svenska" }`.
+Alla svar är JSON. Alla fel har formen `{ "error": "message in English" }`.
 
 Inloggningskrav: skicka `Authorization: Bearer <token>` på allt utom
 register/login/health.
@@ -20,7 +20,7 @@ register/login/health.
 ### POST /api/auth/login
 
 Samma body som register. `200` → `{ "token": "...", "user": { "id": 1, "email": "..." } }`
-`401` fel e-post eller lösenord (samma meddelande för båda)
+`401` wrong email or password (same message for both)
 
 ### GET /api/auth/me
 

@@ -20,13 +20,12 @@ export default function StateView({ kind, message, onRetry, actionLabel, onActio
   }
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{kind === "empty" ? "(=^･ω･^=)" : "(；･∀･)"}</Text>
-      <Text style={styles.message}>{message ?? (kind === "empty" ? "Listan är tom" : "Något gick fel")}</Text>
+      <Text style={styles.message}>{message ?? (kind === "empty" ? "Nothing here yet" : "Something went wrong")}</Text>
       {kind === "empty" && actionLabel && onAction ? (
         <Button label={actionLabel} onPress={onAction} style={styles.button} />
       ) : null}
       {kind === "error" && onRetry ? (
-        <Button label="Försök igen" onPress={onRetry} variant="secondary" style={styles.button} />
+        <Button label="Try again" onPress={onRetry} variant="secondary" style={styles.button} />
       ) : null}
     </View>
   );
@@ -39,9 +38,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
     padding: 24
-  },
-  icon: {
-    fontSize: 28
   },
   message: {
     color: colors.muted,

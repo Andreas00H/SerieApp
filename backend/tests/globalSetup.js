@@ -26,6 +26,6 @@ module.exports = async () => {
     shell: process.platform === "win32"
   });
   if (result.status !== 0) {
-    throw new Error("prisma migrate deploy misslyckades mot testdatabasen");
+    throw new Error("prisma migrate deploy failed against the test database");
   }
 };

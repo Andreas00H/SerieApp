@@ -48,7 +48,7 @@ export default function TitleDetailScreen() {
       if (err instanceof ApiError && err.status === 404) {
         setNotFound(true);
       } else {
-        setError(err instanceof ApiError ? err.message : "Kunde inte hämta titeln");
+        setError(err instanceof ApiError ? err.message : "Could not load the title");
       }
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ export default function TitleDetailScreen() {
       });
       setTitle(data.title);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Kunde inte uppdatera status");
+      setError(err instanceof ApiError ? err.message : "Could not update status");
     } finally {
       setSaving(false);
     }
@@ -91,16 +91,16 @@ export default function TitleDetailScreen() {
       setTitle(data.title);
       setEditing(false);
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.message : "Kunde inte spara ändringarna");
+      setSaveError(err instanceof ApiError ? err.message : "Could not save changes");
     } finally {
       setSaving(false);
     }
   }
 
   function confirmDelete() {
-    Alert.alert("Ta bort titeln", `Vill du ta bort "${title?.name}"?`, [
-      { text: "Avbryt", style: "cancel" },
-      { text: "Ta bort", style: "destructive", onPress: deleteTitle }
+    Alert.alert("Delete title", `Delete "${title?.name}"?`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: deleteTitle }
     ]);
   }
 
@@ -111,7 +111,7 @@ export default function TitleDetailScreen() {
       await api.deleteTitle(token, title.id);
       router.back();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Kunde inte ta bort titeln");
+      setError(err instanceof ApiError ? err.message : "Could not delete the title");
       setDeleting(false);
     }
   }
@@ -120,13 +120,13 @@ export default function TitleDetailScreen() {
     return <StateView kind="loading" />;
   }
   if (notFound) {
-    return <StateView kind="empty" message="Titeln hittades inte" />;
+    return <StateView kind="empty" message="Title not found" />;
   }
   if (error && !title) {
     return <StateView kind="error" message={error} onRetry={() => load()} />;
   }
   if (!title) {
-    return <StateView kind="error" message="Titeln hittades inte" />;
+    return <StateView kind="error" message="Title not found" />;
   }
 
   if (editing) {
@@ -136,11 +136,11 @@ export default function TitleDetailScreen() {
           initial={title}
           submitting={saving}
           error={saveError}
-          submitLabel="Spara ändringar"
+          submitLabel="Save changes"
           onSubmit={saveEdit}
         />
         <Button
-          label="Avbryt"
+          label="Cancel"
           variant="secondary"
           onPress={() => setEditing(false)}
           disabled={saving}
@@ -166,7 +166,7 @@ export default function TitleDetailScreen() {
             {title.runtimeMinutes ? ` · ${title.runtimeMinutes} min` : ""}
           </Text>
           {title.externalId ? (
-            <Text style={styles.tvmaze}>TVmaze-id {title.externalId}</Text>
+            <Text style={styles.tvmaze}>TVmaze id {title.externalId}</Text>
           ) : null}
           <StatusPill status={title.status} />
         </View>
@@ -195,7 +195,7 @@ export default function TitleDetailScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <View style={styles.actions}>
-        <Button label="Redigera" variant="secondary" onPress={() => setEditing(true)} style={styles.action} />
+        <Button label="Edit" variant="secondary" onPress={() => setEditing(true)} style={styles.action} />
         <Button label="Ta bort" variant="danger" onPress={confirmDelete} loading={deleting} style={styles.action} />
       </View>
     </ScrollView>

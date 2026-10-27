@@ -6,22 +6,22 @@ const { authRequired } = require("../middleware/auth");
 router.use(authRequired);
 
 const titleSchema = z.object({
-  name: z.string({ required_error: "Namn krävs" }).trim().min(1, "Namn krävs").max(120, "Namnet får vara högst 120 tecken"),
+  name: z.string({ required_error: "Name is required" }).trim().min(1, "Namn krävs").max(120, "Name must be at most 120 characters"),
   kind: z.enum(["movie", "series"], {
-    errorMap: () => ({ message: "Typ måste vara movie eller series" })
+    errorMap: () => ({ message: "Kind must be movie or series" })
   }),
-  genre: z.string().trim().max(60, "Genren får vara högst 60 tecken").optional(),
+  genre: z.string().trim().max(60, "Genre must be at most 60 characters").optional(),
   status: z.enum(["unwatched", "watching", "watched"], {
-    errorMap: () => ({ message: "Status måste vara unwatched, watching eller watched" })
+    errorMap: () => ({ message: "Status must be unwatched, watching or watched" })
   }).default("unwatched"),
   runtimeMinutes: z.coerce
     .number()
-    .int("Speltid måste vara ett heltal")
-    .positive("Speltid måste vara positiv")
-    .max(6000, "Speltiden är orimligt lång")
+    .int("Runtime must be an integer")
+    .positive("Runtime must be positive")
+    .max(6000, "Runtime is unreasonably long")
     .optional(),
   externalId: z.coerce.number().int().positive().optional(),
-  imageUrl: z.string().url("Ogiltig bildadress").optional()
+  imageUrl: z.string().url("Invalid image URL").optional()
 });
 
 function firstIssue(parsed) {
@@ -59,7 +59,7 @@ router.get("/random", async (req, res, next) => {
     }
     const matches = await prisma.title.findMany({ where });
     if (matches.length === 0) {
-      return res.status(404).json({ error: "Ingen titel matchar filtren" });
+      return res.status(404).json({ error: "No titles match these filters" });
     }
     const title = matches[Math.floor(Math.random() * matches.length)];
     res.json({ title });
@@ -97,7 +97,7 @@ router.get("/:id", async (req, res, next) => {
   try {
     const title = await findOwnedTitle(req);
     if (!title) {
-      return res.status(404).json({ error: "Titeln hittades inte" });
+      return res.status(404).json({ error: "Title not found" });
     }
     res.json({ title });
   } catch (err) {
@@ -109,7 +109,7 @@ router.put("/:id", async (req, res, next) => {
   try {
     const existing = await findOwnedTitle(req);
     if (!existing) {
-      return res.status(404).json({ error: "Titeln hittades inte" });
+      return res.status(404).json({ error: "Title not found" });
     }
     const parsed = titleSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -129,7 +129,7 @@ router.delete("/:id", async (req, res, next) => {
   try {
     const existing = await findOwnedTitle(req);
     if (!existing) {
-      return res.status(404).json({ error: "Titeln hittades inte" });
+      return res.status(404).json({ error: "Title not found" });
     }
     await prisma.title.delete({ where: { id: existing.id } });
     res.status(204).end();

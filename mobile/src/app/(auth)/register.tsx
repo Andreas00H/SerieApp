@@ -22,11 +22,11 @@ export default function RegisterScreen() {
 
   async function submit() {
     if (!email.includes("@")) {
-      setError("Ange en giltig e-postadress");
+      setError("Enter a valid email address");
       return;
     }
     if (password.length < 8) {
-      setError("Lösenordet måste vara minst 8 tecken");
+      setError("Password must be at least 8 characters");
       return;
     }
     setSubmitting(true);
@@ -34,7 +34,7 @@ export default function RegisterScreen() {
     try {
       await signUp(email.trim().toLowerCase(), password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registreringen misslyckades");
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setSubmitting(false);
     }
@@ -50,37 +50,37 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.logo}>SerieApp</Text>
-        <Text style={styles.tagline}>Skapa ett konto för din lista</Text>
+        <Text style={styles.tagline}>Create an account for your list</Text>
 
         <Field
-          label="E-post"
+          label="Email"
           inputProps={{
             value: email,
             onChangeText: setEmail,
             autoCapitalize: "none",
             autoComplete: "email",
             keyboardType: "email-address",
-            placeholder: "du@exempel.se"
+            placeholder: "you@example.com"
           }}
         />
         <Field
-          label="Lösenord"
-          hint="Minst 8 tecken"
+          label="Password"
+          hint="At least 8 characters"
           inputProps={{
             value: password,
             onChangeText: setPassword,
             secureTextEntry: true,
-            placeholder: "Välj ett lösenord"
+            placeholder: "Choose a password"
           }}
         />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Button label="Skapa konto" onPress={submit} loading={submitting} style={styles.submit} />
+        <Button label="Create account" onPress={submit} loading={submitting} style={styles.submit} />
 
         <Link href="/login" asChild>
           <TouchableOpacity style={styles.linkWrap}>
-            <Text style={styles.link}>Redan konto? Logga in</Text>
+            <Text style={styles.link}>Already have an account? Sign in</Text>
           </TouchableOpacity>
         </Link>
       </ScrollView>
