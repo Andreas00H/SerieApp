@@ -1,25 +1,29 @@
 import { useCallback, useState } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   Alert,
-  Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from "react-native";
-import { useFocusEffect } from "expo-router";
 import { api, ApiError } from "../../../api/client";
 import type { Title, TitleInput, TitleStatus } from "../../../api/types";
 import { useAuth } from "../../../auth/AuthContext";
 import Button from "../../../components/Button";
+import Poster from "../../../components/Poster";
+import SegmentedControl from "../../../components/SegmentedControl";
 import StateView from "../../../components/StateView";
-import StatusPill from "../../../components/StatusPill";
 import TitleForm from "../../../components/TitleForm";
-import { colors, kindLabels, statusLabels } from "../../../constants/theme";
+import { colors, kindLabels, radius, statusColors, statusLabels } from "../../../constants/theme";
 
-const STATUSES: TitleStatus[] = ["unwatched", "watching", "watched"];
+const STATUS_OPTIONS = (["unwatched", "watching", "watched"] as TitleStatus[]).map((value) => ({
+  value,
+  label: statusLabels[value],
+  color: statusColors[value]
+}));
 
 export default function TitleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,6 +37,7 @@ export default function TitleDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const titleId = Number(id);
 
@@ -61,9 +66,15 @@ export default function TitleDetailScreen() {
     }, [load])
   );
 
+  function flash(text: string) {
+    setNotice(text);
+    setTimeout(() => setNotice(null), 2000);
+  }
+
   async function changeStatus(status: TitleStatus) {
-    if (!token || !title) return;
+    if (!token || !title || status === title.status) return;
     setSaving(true);
+    setError(null);
     try {
       const data = await api.updateTitle(token, title.id, {
         name: title.name,
@@ -75,6 +86,7 @@ export default function TitleDetailScreen() {
         imageUrl: title.imageUrl ?? undefined
       });
       setTitle(data.title);
+      flash(`Status changed to ${statusLabels[status].toLowerCase()}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not update status");
     } finally {
@@ -90,6 +102,7 @@ export default function TitleDetailScreen() {
       const data = await api.updateTitle(token, title.id, input);
       setTitle(data.title);
       setEditing(false);
+      flash("Changes saved");
     } catch (err) {
       setSaveError(err instanceof ApiError ? err.message : "Could not save changes");
     } finally {
@@ -98,6 +111,13 @@ export default function TitleDetailScreen() {
   }
 
   function confirmDelete() {
+    if (Platform.OS === "web") {
+      const ok = (globalThis as { confirm?: (msg: string) => boolean }).confirm?.(
+        `Delete "${title?.name}"?`
+      );
+      if (ok) deleteTitle();
+      return;
+    }
     Alert.alert("Delete title", `Delete "${title?.name}"?`, [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: deleteTitle }
@@ -119,123 +139,160 @@ export default function TitleDetailScreen() {
   if (loading) {
     return <StateView kind="loading" />;
   }
-  if (notFound) {
-    return <StateView kind="empty" message="Title not found" />;
-  }
-  if (error && !title) {
-    return <StateView kind="error" message={error} onRetry={() => load()} />;
+  if (notFound || (!title && !error)) {
+    return <StateView kind="empty" title="Title not found" message="It may have been deleted." />;
   }
   if (!title) {
-    return <StateView kind="error" message="Title not found" />;
+    return <StateView kind="error" message={error ?? undefined} onRetry={() => load()} />;
   }
 
   if (editing) {
     return (
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <TitleForm
-          initial={title}
-          submitting={saving}
-          error={saveError}
-          submitLabel="Save changes"
-          onSubmit={saveEdit}
-        />
-        <Button
-          label="Cancel"
-          variant="secondary"
-          onPress={() => setEditing(false)}
-          disabled={saving}
-          style={styles.cancelButton}
-        />
-      </ScrollView>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={90}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.editHeading}>Edit</Text>
+          <TitleForm
+            initial={title}
+            submitting={saving}
+            error={saveError}
+            submitLabel="Save changes"
+            onSubmit={saveEdit}
+          />
+          <Button label="Cancel" variant="ghost" onPress={() => setEditing(false)} disabled={saving} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.headerRow}>
-        {title.imageUrl ? (
-          <Image source={{ uri: title.imageUrl }} style={styles.poster} />
-        ) : (
-          <View style={[styles.poster, styles.posterEmpty]} />
-        )}
-        <View style={styles.headerText}>
-          <Text style={styles.name}>{title.name}</Text>
-          <Text style={styles.meta}>
-            {kindLabels[title.kind]}
-            {title.genre ? ` · ${title.genre}` : ""}
-            {title.runtimeMinutes ? ` · ${title.runtimeMinutes} min` : ""}
-          </Text>
-          {title.externalId ? (
-            <Text style={styles.tvmaze}>TVmaze id {title.externalId}</Text>
-          ) : null}
-          <StatusPill status={title.status} />
-        </View>
-      </View>
+  const facts = [
+    { label: "Type", value: kindLabels[title.kind] },
+    { label: "Genre", value: title.genre ?? "None" },
+    { label: "Runtime", value: title.runtimeMinutes ? `${title.runtimeMinutes} min` : "Unknown" }
+  ];
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Status</Text>
-        <View style={styles.statusRow}>
-          {STATUSES.map((status) => (
-            <TouchableOpacity
-              key={status}
-              style={[styles.statusChoice, title.status === status && styles.statusChoiceActive]}
-              onPress={() => changeStatus(status)}
-              disabled={saving}
-            >
-              <Text
-                style={[styles.statusChoiceText, title.status === status && styles.statusChoiceTextActive]}
-              >
-                {statusLabels[status]}
+  return (
+    <View style={styles.flex}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.hero}>
+          <Poster name={title.name} imageUrl={title.imageUrl} width={150} style={styles.heroPoster} />
+          <Text style={styles.name}>{title.name}</Text>
+          <Text style={styles.added}>
+            Added {new Date(title.createdAt).toLocaleDateString("en-GB")}
+          </Text>
+        </View>
+
+        <View style={styles.facts}>
+          {facts.map((fact, i) => (
+            <View key={fact.label} style={[styles.fact, i > 0 && styles.factDivider]}>
+              <Text style={styles.factLabel}>{fact.label}</Text>
+              <Text style={styles.factValue} numberOfLines={1}>
+                {fact.value}
               </Text>
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
-      </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Status</Text>
+          <SegmentedControl
+            options={STATUS_OPTIONS}
+            value={title.status}
+            onChange={changeStatus}
+            disabled={saving}
+          />
+        </View>
 
-      <View style={styles.actions}>
-        <Button label="Edit" variant="secondary" onPress={() => setEditing(true)} style={styles.action} />
-        <Button label="Ta bort" variant="danger" onPress={confirmDelete} loading={deleting} style={styles.action} />
-      </View>
-    </ScrollView>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <View style={styles.actions}>
+          <Button label="Edit" variant="secondary" onPress={() => setEditing(true)} style={styles.action} />
+          <Button
+            label="Delete"
+            variant="danger"
+            onPress={confirmDelete}
+            loading={deleting}
+            style={styles.action}
+          />
+        </View>
+
+        {title.externalId ? <Text style={styles.credit}>Data from TVmaze (CC BY-SA)</Text> : null}
+      </ScrollView>
+
+      {notice ? (
+        <View style={styles.toast} accessibilityLiveRegion="polite">
+          <Text style={styles.toastText}>✓  {notice}</Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 18
-  },
-  headerRow: {
-    flexDirection: "row",
-    gap: 14
-  },
-  poster: {
-    width: 110,
-    height: 156,
-    borderRadius: 10,
-    backgroundColor: colors.border
-  },
-  posterEmpty: {
-    backgroundColor: colors.border
-  },
-  headerText: {
+  flex: {
     flex: 1,
-    gap: 6
+    backgroundColor: colors.bg
+  },
+  container: {
+    padding: 20,
+    paddingBottom: 48,
+    gap: 22
+  },
+  hero: {
+    alignItems: "center",
+    gap: 8
+  },
+  heroPoster: {
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10
   },
   name: {
     color: colors.text,
-    fontSize: 24,
-    fontWeight: "800"
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: -0.3
   },
-  meta: {
+  added: {
     color: colors.muted,
-    fontSize: 15
+    fontSize: 13
   },
-  tvmaze: {
+  facts: {
+    flexDirection: "row",
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 14
+  },
+  fact: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 6
+  },
+  factDivider: {
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border
+  },
+  factLabel: {
     color: colors.muted,
-    fontSize: 12
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1
+  },
+  factValue: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "700"
   },
   section: {
     gap: 8
@@ -243,33 +300,8 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: colors.muted,
     fontSize: 13,
-    fontWeight: "600"
-  },
-  statusRow: {
-    flexDirection: "row",
-    gap: 8
-  },
-  statusChoice: {
-    flex: 1,
-    height: 42,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  statusChoiceActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentDark
-  },
-  statusChoiceText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "600"
-  },
-  statusChoiceTextActive: {
-    fontWeight: "800"
+    fontWeight: "600",
+    letterSpacing: 0.3
   },
   error: {
     color: colors.danger,
@@ -282,7 +314,32 @@ const styles = StyleSheet.create({
   action: {
     flex: 1
   },
-  cancelButton: {
-    marginTop: 12
+  credit: {
+    color: colors.muted,
+    fontSize: 11,
+    textAlign: "center"
+  },
+  editHeading: {
+    color: colors.text,
+    fontSize: 26,
+    fontWeight: "800"
+  },
+  toast: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 32,
+    backgroundColor: colors.cardAlt,
+    borderColor: colors.green,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    paddingHorizontal: 16
+  },
+  toastText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+    textAlign: "center"
   }
 });

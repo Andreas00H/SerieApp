@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { api, ApiError } from "../../../api/client";
 import type { TitleInput } from "../../../api/types";
@@ -36,15 +35,10 @@ export default function NewTitleScreen() {
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={90}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <TitleForm
-          submitting={submitting}
-          error={error}
-          submitLabel="Save title"
-          onSubmit={submit}
-        />
-        <View style={{ height: 40 }} />
+        <TitleForm submitting={submitting} error={error} submitLabel="Save title" onSubmit={submit} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -56,6 +50,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg
   },
   container: {
-    padding: 16
+    padding: 20,
+    paddingBottom: 60
   }
 });

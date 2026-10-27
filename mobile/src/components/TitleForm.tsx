@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { Title, TitleInput, TitleKind, TitleStatus, TvmazeResult } from "../api/types";
-import { colors, kindLabels, statusLabels } from "../constants/theme";
+import { colors, kindLabels, radius, statusColors, statusLabels } from "../constants/theme";
 import Button from "./Button";
 import Field from "./Field";
+import Poster from "./Poster";
+import SegmentedControl from "./SegmentedControl";
 import TvmazeSearch from "./TvmazeSearch";
 
 type Props = {
@@ -14,8 +16,16 @@ type Props = {
   onSubmit: (input: TitleInput) => void;
 };
 
-const KINDS: TitleKind[] = ["movie", "series"];
-const STATUSES: TitleStatus[] = ["unwatched", "watching", "watched"];
+const KIND_OPTIONS = (["movie", "series"] as TitleKind[]).map((value) => ({
+  value,
+  label: kindLabels[value]
+}));
+
+const STATUS_OPTIONS = (["unwatched", "watching", "watched"] as TitleStatus[]).map((value) => ({
+  value,
+  label: statusLabels[value],
+  color: statusColors[value]
+}));
 
 export default function TitleForm({ initial, submitting, error, submitLabel, onSubmit }: Props) {
   const [name, setName] = useState("");
@@ -25,6 +35,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
   const [runtime, setRuntime] = useState("");
   const [picked, setPicked] = useState<TvmazeResult | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [invalidField, setInvalidField] = useState<"name" | "runtime" | null>(null);
 
   useEffect(() => {
     if (initial) {
@@ -43,20 +54,24 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
     setGenre(result.genres[0] ?? "");
     if (result.runtimeMinutes) setRuntime(String(result.runtimeMinutes));
     setLocalError(null);
+    setInvalidField(null);
   }
 
   function submit() {
     const trimmedName = name.trim();
     if (!trimmedName) {
       setLocalError("Name is required");
+      setInvalidField("name");
       return;
     }
     const runtimeValue = runtime.trim() ? Number(runtime.trim()) : undefined;
     if (runtimeValue !== undefined && (!Number.isFinite(runtimeValue) || runtimeValue <= 0)) {
-      setLocalError("Runtime must be a positive number of minutes");
+      setLocalError("Runtime must be a positive number (minutes)");
+      setInvalidField("runtime");
       return;
     }
     setLocalError(null);
+    setInvalidField(null);
     onSubmit({
       name: trimmedName,
       kind,
@@ -68,84 +83,115 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
     });
   }
 
+  const message = localError ?? error;
+
   return (
     <View style={styles.wrapper}>
-      <TvmazeSearch onPick={pickFromTvmaze} />
+      {!initial ? <TvmazeSearch onPick={pickFromTvmaze} /> : null}
+
       {picked ? (
-        <Text style={styles.picked}>Linked to TVmaze id {picked.externalId}</Text>
+        <View style={styles.picked}>
+          <Poster name={picked.name} imageUrl={picked.imageUrl} width={40} />
+          <View style={styles.pickedText}>
+            <Text style={styles.pickedTitle}>Filled in from TVmaze</Text>
+            <Text style={styles.pickedSub}>The fields below are filled in, edit if you like</Text>
+          </View>
+        </View>
       ) : null}
 
-      <Field
-        label="Namn"
-        inputProps={{ value: name, onChangeText: setName, placeholder: "t.ex. Interstellar" }}
-      />
+      <View style={styles.card}>
+        <Field
+          label="Name"
+          invalid={invalidField === "name"}
+          inputProps={{
+            value: name,
+            onChangeText: (text) => {
+              setName(text);
+              if (invalidField === "name") setInvalidField(null);
+            },
+            placeholder: "e.g. Interstellar",
+            returnKeyType: "next"
+          }}
+        />
 
-      <View style={styles.group}>
-        <Text style={styles.groupLabel}>Typ</Text>
-        <View style={styles.choiceRow}>
-          {KINDS.map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.choice, kind === option && styles.choiceActive]}
-              onPress={() => setKind(option)}
-            >
-              <Text
-                style={[styles.choiceText, kind === option && styles.choiceTextActive]}
-              >
-                {kindLabels[option]}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>Type</Text>
+          <SegmentedControl options={KIND_OPTIONS} value={kind} onChange={setKind} />
         </View>
+
+        <View style={styles.group}>
+          <Text style={styles.groupLabel}>Status</Text>
+          <SegmentedControl options={STATUS_OPTIONS} value={status} onChange={setStatus} />
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Field
+              label="Genre"
+              inputProps={{ value: genre, onChangeText: setGenre, placeholder: "e.g. Drama" }}
+            />
+          </View>
+          <View style={styles.runtime}>
+            <Field
+              label="Minutes"
+              invalid={invalidField === "runtime"}
+              inputProps={{
+                value: runtime,
+                onChangeText: (text) => {
+                  setRuntime(text);
+                  if (invalidField === "runtime") setInvalidField(null);
+                },
+                placeholder: "45",
+                keyboardType: "number-pad"
+              }}
+            />
+          </View>
+        </View>
+        <Text style={styles.hint}>Runtime is used when you randomize with a time filter.</Text>
       </View>
 
-      <View style={styles.group}>
-        <Text style={styles.groupLabel}>Status</Text>
-        <View style={styles.choiceRow}>
-          {STATUSES.map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.choice, status === option && styles.choiceActive]}
-              onPress={() => setStatus(option)}
-            >
-              <Text
-                style={[styles.choiceText, status === option && styles.choiceTextActive]}
-              >
-                {statusLabels[option]}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      {message ? (
+        <View style={styles.errorBox} accessibilityLiveRegion="polite">
+          <Text style={styles.errorText}>{message}</Text>
         </View>
-      </View>
+      ) : null}
 
-      <Field
-        label="Genre"
-        inputProps={{ value: genre, onChangeText: setGenre, placeholder: "t.ex. Drama" }}
-      />
-      <Field
-        label="Runtime (minutes)"
-        hint="Used by the randomizer when you filter on time"
-        inputProps={{
-          value: runtime,
-          onChangeText: setRuntime,
-          placeholder: "t.ex. 45",
-          keyboardType: "number-pad"
-        }}
-      />
-
-      {localError || error ? <Text style={styles.error}>{localError ?? error}</Text> : null}
-
-      <Button label={submitLabel} onPress={submit} loading={submitting} style={styles.submit} />
+      <Button label={submitLabel} onPress={submit} loading={submitting} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: 14
+    gap: 16
+  },
+  card: {
+    gap: 16,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16
   },
   picked: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.md,
+    padding: 10
+  },
+  pickedText: {
+    flex: 1,
+    gap: 2
+  },
+  pickedTitle: {
     color: colors.accent,
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  pickedSub: {
+    color: colors.muted,
     fontSize: 13
   },
   group: {
@@ -154,40 +200,32 @@ const styles = StyleSheet.create({
   groupLabel: {
     color: colors.muted,
     fontSize: 13,
-    fontWeight: "600"
+    fontWeight: "600",
+    letterSpacing: 0.3
   },
-  choiceRow: {
+  row: {
     flexDirection: "row",
-    gap: 8
+    gap: 12
   },
-  choice: {
-    flex: 1,
-    height: 42,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    justifyContent: "center"
+  flex: {
+    flex: 1
   },
-  choiceActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentDark
+  runtime: {
+    width: 100
   },
-  choiceText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600"
+  hint: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: -8
   },
-  choiceTextActive: {
-    color: colors.text,
-    fontWeight: "800"
+  errorBox: {
+    backgroundColor: "rgba(255, 93, 93, 0.12)",
+    borderRadius: radius.md,
+    padding: 12
   },
-  error: {
+  errorText: {
     color: colors.danger,
-    fontSize: 14
-  },
-  submit: {
-    marginTop: 4
+    fontSize: 14,
+    fontWeight: "600"
   }
 });
