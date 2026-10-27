@@ -13,9 +13,9 @@ export const colors = {
 } as const;
 
 export const statusLabels: Record<string, string> = {
-  unwatched: "Ej sedd",
-  watching: "Tittar",
-  watched: "Sedd"
+  unwatched: "Unwatched",
+  watching: "Watching",
+  watched: "Watched"
 };
 
 export const statusColors: Record<string, string> = {
@@ -25,6 +25,6 @@ export const statusColors: Record<string, string> = {
 };
 
 export const kindLabels: Record<string, string> = {
-  movie: "Film",
-  series: "Serie"
+  movie: "Movie",
+  series: "Series"
 };

@@ -7,14 +7,14 @@ const config = require("../config");
 
 const credentialsSchema = z.object({
   email: z
-    .string({ required_error: "E-post krävs" })
+    .string({ required_error: "Email is required" })
     .trim()
     .toLowerCase()
-    .email("Ogiltig e-postadress"),
+    .email("Invalid email address"),
   password: z
-    .string({ required_error: "Lösenord krävs" })
-    .min(8, "Lösenordet måste vara minst 8 tecken")
-    .max(72, "Lösenordet får vara högst 72 tecken")
+    .string({ required_error: "Password is required" })
+    .min(8, "Password must be at least 8 characters")
+    .max(72, "Password must be at most 72 characters")
 });
 
 router.post("/register", async (req, res, next) => {
@@ -26,7 +26,7 @@ router.post("/register", async (req, res, next) => {
     const { email, password } = parsed.data;
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      return res.status(409).json({ error: "E-postadressen är redan registrerad" });
+      return res.status(409).json({ error: "That email is already registered" });
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({ data: { email, passwordHash } });
@@ -40,12 +40,12 @@ router.post("/login", async (req, res, next) => {
   try {
     const parsed = credentialsSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(401).json({ error: "Fel e-post eller lösenord" });
+      return res.status(401).json({ error: "Wrong email or password" });
     }
     const { email, password } = parsed.data;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return res.status(401).json({ error: "Fel e-post eller lösenord" });
+      return res.status(401).json({ error: "Wrong email or password" });
     }
     const token = jwt.sign({ userId: user.id }, config.jwtSecret, {
       expiresIn: config.jwtExpiresIn
@@ -63,7 +63,7 @@ router.get("/me", require("../middleware/auth").authRequired, async (req, res, n
       select: { id: true, email: true }
     });
     if (!user) {
-      return res.status(401).json({ error: "Ogiltig eller utgången session" });
+      return res.status(401).json({ error: "Invalid or expired session" });
     }
     res.json({ user });
   } catch (err) {

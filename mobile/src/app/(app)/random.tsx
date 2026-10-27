@@ -30,7 +30,7 @@ export default function RandomScreen() {
     if (!token) return;
     const runtimeValue = maxRuntime.trim() ? Number(maxRuntime.trim()) : undefined;
     if (runtimeValue !== undefined && (!Number.isFinite(runtimeValue) || runtimeValue <= 0)) {
-      setError("Tid måste vara ett positivt antal minuter");
+      setError("Time must be a positive number of minutes");
       return;
     }
     setLoading(true);
@@ -47,7 +47,7 @@ export default function RandomScreen() {
         setResult(null);
         setMiss(true);
       } else {
-        setError(err instanceof ApiError ? err.message : "Slumpningen misslyckades");
+        setError(err instanceof ApiError ? err.message : "Randomize failed");
       }
     } finally {
       setLoading(false);
@@ -60,23 +60,23 @@ export default function RandomScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.question}>Vad ska vi titta på ikväll?</Text>
+        <Text style={styles.question}>What are we watching tonight?</Text>
 
         <Field
-          label="Genre (valfritt)"
+          label="Genre (optional)"
           inputProps={{
             value: genre,
             onChangeText: setGenre,
-            placeholder: "t.ex. Drama",
+            placeholder: "e.g. Drama",
             autoCapitalize: "none"
           }}
         />
         <Field
-          label="Max tid i minuter (valfritt)"
+          label="Max time in minutes (optional)"
           inputProps={{
             value: maxRuntime,
             onChangeText: setMaxRuntime,
-            placeholder: "t.ex. 120",
+            placeholder: "e.g. 120",
             keyboardType: "number-pad"
           }}
         />
@@ -84,7 +84,7 @@ export default function RandomScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Button
-          label={result ? "Slumpa igen" : "Slumpa en titel"}
+          label={result ? "Randomize again" : "Pick a random title"}
           onPress={roll}
           loading={loading}
           style={styles.rollButton}
@@ -93,13 +93,13 @@ export default function RandomScreen() {
         {miss ? (
           <StateView
             kind="empty"
-            message="Ingen titel matchar filtren – lägg till fler eller slipp filtret"
+            message="No titles match these filters – add more or drop them"
           />
         ) : null}
 
         {result ? (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>KVÄLLENS TITEL</Text>
+            <Text style={styles.cardLabel}>TONIGHT'S PICK</Text>
             <Text style={styles.cardName}>{result.name}</Text>
             <Text style={styles.cardMeta}>
               {kindLabels[result.kind]}
@@ -108,7 +108,7 @@ export default function RandomScreen() {
             </Text>
             <StatusPill status={result.status} />
             <RouterLink href={`/titles/${result.id}`} asChild>
-              <Button label="Öppna titeln" variant="secondary" style={styles.openButton} />
+              <Button label="Open title" variant="secondary" style={styles.openButton} />
             </RouterLink>
           </View>
         ) : null}

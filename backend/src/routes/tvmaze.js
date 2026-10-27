@@ -15,7 +15,7 @@ router.get("/search", async (req, res, next) => {
   try {
     const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
     if (!q) {
-      return res.status(400).json({ error: "Sökfråga krävs" });
+      return res.status(400).json({ error: "Search query is required" });
     }
     const key = q.toLowerCase();
     const cached = cache.get(key);
@@ -27,7 +27,7 @@ router.get("/search", async (req, res, next) => {
       { headers: { "User-Agent": "SerieApp/1.0 (skolprojekt)" } }
     );
     if (!response.ok) {
-      return res.status(502).json({ error: "Kunde inte nå TVmaze" });
+      return res.status(502).json({ error: "Could not reach TVmaze" });
     }
     const data = await response.json();
     const results = data.map(({ show }) => ({

@@ -48,12 +48,12 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
   function submit() {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setLocalError("Namn krävs");
+      setLocalError("Name is required");
       return;
     }
     const runtimeValue = runtime.trim() ? Number(runtime.trim()) : undefined;
     if (runtimeValue !== undefined && (!Number.isFinite(runtimeValue) || runtimeValue <= 0)) {
-      setLocalError("Speltid måste vara ett positivt tal (minuter)");
+      setLocalError("Runtime must be a positive number of minutes");
       return;
     }
     setLocalError(null);
@@ -72,7 +72,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
     <View style={styles.wrapper}>
       <TvmazeSearch onPick={pickFromTvmaze} />
       {picked ? (
-        <Text style={styles.picked}>Kopplad till TVmaze-id {picked.externalId}</Text>
+        <Text style={styles.picked}>Linked to TVmaze id {picked.externalId}</Text>
       ) : null}
 
       <Field
@@ -123,8 +123,8 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
         inputProps={{ value: genre, onChangeText: setGenre, placeholder: "t.ex. Drama" }}
       />
       <Field
-        label="Speltid (minuter)"
-        hint="Används av slumparen när du filtrerar på tid"
+        label="Runtime (minutes)"
+        hint="Used by the randomizer when you filter on time"
         inputProps={{
           value: runtime,
           onChangeText: setRuntime,

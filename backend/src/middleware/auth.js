@@ -5,14 +5,14 @@ function authRequired(req, res, next) {
   const header = req.headers.authorization || "";
   const [scheme, token] = header.split(" ");
   if (scheme !== "Bearer" || !token) {
-    return res.status(401).json({ error: "Du måste vara inloggad" });
+    return res.status(401).json({ error: "You must be signed in" });
   }
   try {
     const payload = jwt.verify(token, config.jwtSecret);
     req.userId = payload.userId;
     next();
   } catch {
-    return res.status(401).json({ error: "Ogiltig eller utgången session" });
+    return res.status(401).json({ error: "Invalid or expired session" });
   }
 }
 

@@ -26,7 +26,7 @@ export default function ListScreen() {
         const data = await api.listTitles(token);
         setTitles(data.titles);
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : "Kunde inte hämta listan");
+        setError(err instanceof ApiError ? err.message : "Could not load your list");
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -51,8 +51,8 @@ export default function ListScreen() {
     return (
       <StateView
         kind="empty"
-        message="Inga titlar än – lägg till din första film eller serie"
-        actionLabel="Lägg till titel"
+        message="No titles yet – add your first movie or series"
+        actionLabel="Add title"
         onAction={() => router.push("/titles/new")}
       />
     );
@@ -62,12 +62,12 @@ export default function ListScreen() {
     <View style={styles.flex}>
       <View style={styles.actions}>
         <Button
-          label="Lägg till titel"
+          label="Add title"
           onPress={() => router.push("/titles/new")}
           style={styles.actionButton}
         />
         <Button
-          label="Slumpa"
+          label="Random"
           variant="secondary"
           onPress={() => router.push("/random")}
           style={styles.actionButton}
