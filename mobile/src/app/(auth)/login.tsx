@@ -14,7 +14,7 @@ import Field from "../../components/Field";
 import { colors } from "../../constants/theme";
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, sessionExpired } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +51,10 @@ export default function LoginScreen() {
       >
         <Text style={styles.logo}>SerieApp</Text>
         <Text style={styles.tagline}>Your movies and series – in one place</Text>
+
+        {sessionExpired ? (
+          <Text style={styles.notice}>Your session has expired. Please sign in again.</Text>
+        ) : null}
 
         <Field
           label="Email"
@@ -110,6 +114,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: "center",
     marginBottom: 16
+  },
+  notice: {
+    color: colors.amber,
+    fontSize: 14,
+    textAlign: "center"
   },
   error: {
     color: colors.danger,
