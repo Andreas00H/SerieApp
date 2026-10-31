@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { api, ApiError } from "../api/client";
+import { api, ApiError, setUnauthorizedHandler } from "../api/client";
 import type { User } from "../api/types";
 
 const TOKEN_KEY = "serieapp_token";
@@ -43,6 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setBooting(false);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      void SecureStore.deleteItemAsync(TOKEN_KEY);
+      setToken(null);
+      setUser(null);
+    });
+    return () => setUnauthorizedHandler(null);
   }, []);
 
   const value = useMemo<AuthState>(
