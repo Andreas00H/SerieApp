@@ -8,14 +8,14 @@ import {
   Text,
   View
 } from "react-native";
-import { api, ApiError } from "../../api/client";
-import type { Title } from "../../api/types";
-import { useAuth } from "../../auth/AuthContext";
-import Button from "../../components/Button";
-import Field from "../../components/Field";
-import StateView from "../../components/StateView";
-import StatusPill from "../../components/StatusPill";
-import { colors, kindLabels } from "../../constants/theme";
+import { api, ApiError } from "../../../api/client";
+import type { Title } from "../../../api/types";
+import { useAuth } from "../../../auth/AuthContext";
+import Button from "../../../components/Button";
+import Field from "../../../components/Field";
+import StateView from "../../../components/StateView";
+import StatusPill from "../../../components/StatusPill";
+import { colors, kindLabels } from "../../../constants/theme";
 
 export default function RandomScreen() {
   const { token } = useAuth();
