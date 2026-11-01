@@ -66,12 +66,6 @@ export default function ListScreen() {
           onPress={() => router.push("/titles/new")}
           style={styles.actionButton}
         />
-        <Button
-          label="Random"
-          variant="secondary"
-          onPress={() => router.push("/random")}
-          style={styles.actionButton}
-        />
       </View>
       <ScrollView
         contentContainerStyle={styles.list}
