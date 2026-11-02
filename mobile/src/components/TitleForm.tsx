@@ -23,6 +23,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
   const [status, setStatus] = useState<TitleStatus>("unwatched");
   const [genre, setGenre] = useState("");
   const [runtime, setRuntime] = useState("");
+  const [episodes, setEpisodes] = useState("");
   const [picked, setPicked] = useState<TvmazeResult | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -33,6 +34,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
       setStatus(initial.status);
       setGenre(initial.genre ?? "");
       setRuntime(initial.runtimeMinutes ? String(initial.runtimeMinutes) : "");
+      setEpisodes(initial.episodesWatched != null ? String(initial.episodesWatched) : "");
     }
   }, [initial]);
 
@@ -56,6 +58,12 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
       setLocalError("Runtime must be a positive number of minutes");
       return;
     }
+    // Avsnitt gäller bara serier. Tom ruta betyder "inte angivet" (null).
+    const episodesValue = episodes.trim() ? Number(episodes.trim()) : null;
+    if (kind === "series" && episodesValue !== null && (!Number.isInteger(episodesValue) || episodesValue < 0)) {
+      setLocalError("Episodes watched must be a whole number (0 or more)");
+      return;
+    }
     setLocalError(null);
     onSubmit({
       name: trimmedName,
@@ -63,6 +71,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
       status,
       genre: genre.trim() ? genre.trim() : undefined,
       runtimeMinutes: runtimeValue,
+      episodesWatched: kind === "series" ? episodesValue : null,
       externalId: picked ? picked.externalId : initial?.externalId ?? undefined,
       imageUrl: picked?.imageUrl ?? initial?.imageUrl ?? undefined
     });
@@ -122,16 +131,33 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
         label="Genre"
         inputProps={{ value: genre, onChangeText: setGenre, placeholder: "t.ex. Drama" }}
       />
-      <Field
-        label="Runtime (minutes)"
-        hint="Used by the randomizer when you filter on time"
-        inputProps={{
-          value: runtime,
-          onChangeText: setRuntime,
-          placeholder: "t.ex. 45",
-          keyboardType: "number-pad"
-        }}
-      />
+      <View style={styles.numberRow}>
+        <View style={styles.numberField}>
+          <Field
+            label="Runtime (minutes)"
+            inputProps={{
+              value: runtime,
+              onChangeText: setRuntime,
+              placeholder: "t.ex. 45",
+              keyboardType: "number-pad"
+            }}
+          />
+        </View>
+        {kind === "series" ? (
+          <View style={styles.numberField}>
+            <Field
+              label="Episodes watched"
+              inputProps={{
+                value: episodes,
+                onChangeText: setEpisodes,
+                placeholder: "t.ex. 3",
+                keyboardType: "number-pad"
+              }}
+            />
+          </View>
+        ) : null}
+      </View>
+      <Text style={styles.hint}>Runtime is used by the randomizer when you filter on time</Text>
 
       {localError || error ? <Text style={styles.error}>{localError ?? error}</Text> : null}
 
@@ -182,6 +208,18 @@ const styles = StyleSheet.create({
   choiceTextActive: {
     color: colors.text,
     fontWeight: "800"
+  },
+  numberRow: {
+    flexDirection: "row",
+    gap: 10
+  },
+  numberField: {
+    flex: 1
+  },
+  hint: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: -8
   },
   error: {
     color: colors.danger,
