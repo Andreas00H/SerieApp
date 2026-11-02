@@ -66,7 +66,7 @@ vara öppna i brandväggen. Sedan svarar API:t på `https://<DOMAIN>/api/...`.
 ## Verifiera
 
 ```bash
-curl https://<DOMAIN>/api/health          # eller annan enkel route
+curl https://<DOMAIN>/health          # eller annan enkel route
 docker compose ps                          # alla tre tjänster ska vara Up
 docker compose exec db pg_isready -U serieapp
 ```
