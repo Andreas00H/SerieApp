@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { api, ApiError } from "../api/client";
+import { api, ApiError, setUnauthorizedHandler } from "../api/client";
 import type { User } from "../api/types";
 
 const TOKEN_KEY = "serieapp_token";
@@ -10,6 +10,7 @@ type AuthState = {
   token: string | null;
   user: User | null;
   booting: boolean;
+  sessionExpired: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [booting, setBooting] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } catch (err) {
             if (err instanceof ApiError && err.status === 401) {
               await SecureStore.deleteItemAsync(TOKEN_KEY);
+              setSessionExpired(true);
             } else {
               setToken(saved);
             }
@@ -45,14 +48,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      void SecureStore.deleteItemAsync(TOKEN_KEY);
+      setToken(null);
+      setUser(null);
+      setSessionExpired(true);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   const value = useMemo<AuthState>(
     () => ({
       token,
       user,
       booting,
+      sessionExpired,
       signIn: async (email, password) => {
         const data = await api.login(email, password);
         await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+        setSessionExpired(false);
         setToken(data.token);
         setUser(data.user);
       },
@@ -60,16 +75,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await api.register(email, password);
         const data = await api.login(email, password);
         await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+        setSessionExpired(false);
         setToken(data.token);
         setUser(data.user);
       },
       signOut: async () => {
         await SecureStore.deleteItemAsync(TOKEN_KEY);
+        setSessionExpired(false);
         setToken(null);
         setUser(null);
       }
     }),
-    [token, user, booting]
+    [token, user, booting, sessionExpired]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

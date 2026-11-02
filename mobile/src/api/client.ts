@@ -11,6 +11,12 @@ export class ApiError extends Error {
   }
 }
 
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
+}
+
 type Options = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
@@ -37,6 +43,9 @@ async function request<T>(path: string, options: Options = {}): Promise<T> {
     data = await res.json();
   } catch {}
   if (!res.ok) {
+    if (res.status === 401 && token) {
+      onUnauthorized?.();
+    }
     throw new ApiError(data?.error || `Fel ${res.status}`, res.status);
   }
   return data as T;
