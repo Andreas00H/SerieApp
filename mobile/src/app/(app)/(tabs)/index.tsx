@@ -105,6 +105,7 @@ function TitleRow({ title }: { title: Title }) {
             {kindLabels[title.kind]}
             {title.genre ? ` · ${title.genre}` : ""}
             {title.runtimeMinutes ? ` · ${title.runtimeMinutes} min` : ""}
+            {title.kind === "series" && title.episodesWatched != null ? ` · ep ${title.episodesWatched}` : ""}
           </Text>
         </View>
         <StatusPill status={title.status} />

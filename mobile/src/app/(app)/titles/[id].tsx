@@ -71,6 +71,7 @@ export default function TitleDetailScreen() {
         status,
         genre: title.genre ?? undefined,
         runtimeMinutes: title.runtimeMinutes ?? undefined,
+        episodesWatched: title.episodesWatched,
         externalId: title.externalId ?? undefined,
         imageUrl: title.imageUrl ?? undefined
       });
@@ -165,6 +166,9 @@ export default function TitleDetailScreen() {
             {title.genre ? ` · ${title.genre}` : ""}
             {title.runtimeMinutes ? ` · ${title.runtimeMinutes} min` : ""}
           </Text>
+          {title.kind === "series" && title.episodesWatched != null ? (
+            <Text style={styles.episodes}>{title.episodesWatched} episodes watched</Text>
+          ) : null}
           {title.externalId ? (
             <Text style={styles.tvmaze}>TVmaze id {title.externalId}</Text>
           ) : null}
@@ -232,6 +236,11 @@ const styles = StyleSheet.create({
   meta: {
     color: colors.muted,
     fontSize: 15
+  },
+  episodes: {
+    color: colors.blue,
+    fontSize: 14,
+    fontWeight: "600"
   },
   tvmaze: {
     color: colors.muted,
