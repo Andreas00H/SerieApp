@@ -1,14 +1,17 @@
 import { StyleSheet, Text, View } from "react-native";
-import { statusColors, statusLabels } from "../constants/theme";
+import type { StyleProp, ViewStyle } from "react-native";
+import { colors, radius, statusColors, statusLabels } from "../constants/theme";
 
 type Props = {
   status: string;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function StatusPill({ status }: Props) {
-  const color = statusColors[status] ?? "#999";
+export default function StatusPill({ status, style }: Props) {
+  const color = statusColors[status] ?? colors.muted;
   return (
-    <View style={[styles.pill, { borderColor: color }]}>
+    <View style={[styles.pill, { backgroundColor: `${color}22` }, style]}>
+      <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={[styles.text, { color }]}>{statusLabels[status] ?? status}</Text>
     </View>
   );
@@ -16,11 +19,18 @@ export default function StatusPill({ status }: Props) {
 
 const styles = StyleSheet.create({
   pill: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingVertical: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: radius.pill,
+    paddingVertical: 4,
     paddingHorizontal: 10,
     alignSelf: "flex-start"
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3
   },
   text: {
     fontSize: 12,
