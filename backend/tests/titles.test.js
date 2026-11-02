@@ -198,3 +198,83 @@ describe("GET /api/titles/random", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("episodesWatched (avsnitt sedda)", () => {
+  test("sparar antal sedda avsnitt på en serie", async () => {
+    const user = await createUser("nya@serieapp.se");
+    const res = await request(app)
+      .post("/api/titles")
+      .set(user.auth)
+      .send({ name: "The Bear", kind: "series", episodesWatched: 7 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.title.episodesWatched).toBe(7);
+  });
+
+  test("en ny titel utan avsnitt får null", async () => {
+    const user = await createUser("nya@serieapp.se");
+    const title = await createTitle(user);
+    expect(title.episodesWatched).toBeNull();
+  });
+
+  test("uppdaterar avsnitt med PUT och kan nollställa med null", async () => {
+    const user = await createUser("nya@serieapp.se");
+    const title = await createTitle(user, { episodesWatched: 3 });
+
+    const up = await request(app)
+      .put(`/api/titles/${title.id}`)
+      .set(user.auth)
+      .send({ name: "Breaking Bad", kind: "series", episodesWatched: 4 });
+    expect(up.status).toBe(200);
+    expect(up.body.title.episodesWatched).toBe(4);
+
+    const cleared = await request(app)
+      .put(`/api/titles/${title.id}`)
+      .set(user.auth)
+      .send({ name: "Breaking Bad", kind: "series", episodesWatched: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.title.episodesWatched).toBeNull();
+  });
+
+  test("en film sparas alltid utan avsnitt", async () => {
+    const user = await createUser("nya@serieapp.se");
+    const res = await request(app)
+      .post("/api/titles")
+      .set(user.auth)
+      .send({ name: "Interstellar", kind: "movie", episodesWatched: 5 });
+
+    expect(res.status).toBe(201);
+    expect(res.body.title.episodesWatched).toBeNull();
+  });
+
+  test.each([
+    ["negativt tal", -1],
+    ["decimaltal", 2.5],
+    ["text", "många"],
+    ["orimligt högt tal", 10001]
+  ])("avslår %s med 400", async (_label, value) => {
+    const user = await createUser("nya@serieapp.se");
+    const res = await request(app)
+      .post("/api/titles")
+      .set(user.auth)
+      .send({ name: "Test", kind: "series", episodesWatched: value });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toEqual(expect.any(String));
+  });
+
+  test("kan inte ändra avsnitt på någon annans titel", async () => {
+    const userA = await createUser("a@serieapp.se");
+    const userB = await createUser("b@serieapp.se");
+    const title = await createTitle(userA, { episodesWatched: 2 });
+
+    const res = await request(app)
+      .put(`/api/titles/${title.id}`)
+      .set(userB.auth)
+      .send({ name: "Breaking Bad", kind: "series", episodesWatched: 99 });
+    expect(res.status).toBe(404);
+
+    const still = await prisma.title.findUnique({ where: { id: title.id } });
+    expect(still.episodesWatched).toBe(2);
+  });
+});
