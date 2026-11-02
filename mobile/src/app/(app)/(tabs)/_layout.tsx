@@ -13,6 +13,7 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: "700" },
+        headerShadowVisible: false,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted
@@ -22,6 +23,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: user ? `${user.email}'s list` : "Your list",
+          headerShown: false,
           tabBarLabel: "List",
           tabBarIcon: ({ color, size }) => <Ionicons name="list" size={size} color={color as string} />
         }}
