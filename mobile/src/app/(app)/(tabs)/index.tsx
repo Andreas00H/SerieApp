@@ -177,7 +177,12 @@ function FilterChip({
 }
 
 function TitleRow({ title }: { title: Title }) {
-  const meta = [kindLabels[title.kind], title.genre, title.runtimeMinutes ? `${title.runtimeMinutes} min` : null]
+  const meta = [
+    kindLabels[title.kind],
+    title.genre,
+    title.runtimeMinutes ? `${title.runtimeMinutes} min` : null,
+    title.kind === "series" && title.episodesWatched != null ? `ep ${title.episodesWatched}` : null
+  ]
     .filter(Boolean)
     .join("  ·  ");
   return (

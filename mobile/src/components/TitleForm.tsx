@@ -33,9 +33,10 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
   const [status, setStatus] = useState<TitleStatus>("unwatched");
   const [genre, setGenre] = useState("");
   const [runtime, setRuntime] = useState("");
+  const [episodes, setEpisodes] = useState("");
   const [picked, setPicked] = useState<TvmazeResult | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [invalidField, setInvalidField] = useState<"name" | "runtime" | null>(null);
+  const [invalidField, setInvalidField] = useState<"name" | "runtime" | "episodes" | null>(null);
 
   useEffect(() => {
     if (initial) {
@@ -44,6 +45,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
       setStatus(initial.status);
       setGenre(initial.genre ?? "");
       setRuntime(initial.runtimeMinutes ? String(initial.runtimeMinutes) : "");
+      setEpisodes(initial.episodesWatched != null ? String(initial.episodesWatched) : "");
     }
   }, [initial]);
 
@@ -70,6 +72,13 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
       setInvalidField("runtime");
       return;
     }
+    // Avsnitt gäller bara serier. Tom ruta betyder "inte angivet" (null).
+    const episodesValue = episodes.trim() ? Number(episodes.trim()) : null;
+    if (kind === "series" && episodesValue !== null && (!Number.isInteger(episodesValue) || episodesValue < 0)) {
+      setLocalError("Episodes watched must be a whole number (0 or more)");
+      setInvalidField("episodes");
+      return;
+    }
     setLocalError(null);
     setInvalidField(null);
     onSubmit({
@@ -78,6 +87,7 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
       status,
       genre: genre.trim() ? genre.trim() : undefined,
       runtimeMinutes: runtimeValue,
+      episodesWatched: kind === "series" ? episodesValue : null,
       externalId: picked ? picked.externalId : initial?.externalId ?? undefined,
       imageUrl: picked?.imageUrl ?? initial?.imageUrl ?? undefined
     });
@@ -146,6 +156,23 @@ export default function TitleForm({ initial, submitting, error, submitLabel, onS
               }}
             />
           </View>
+          {kind === "series" ? (
+            <View style={styles.runtime}>
+              <Field
+                label="Episodes"
+                invalid={invalidField === "episodes"}
+                inputProps={{
+                  value: episodes,
+                  onChangeText: (text) => {
+                    setEpisodes(text);
+                    if (invalidField === "episodes") setInvalidField(null);
+                  },
+                  placeholder: "3",
+                  keyboardType: "number-pad"
+                }}
+              />
+            </View>
+          ) : null}
         </View>
         <Text style={styles.hint}>Runtime is used when you randomize with a time filter.</Text>
       </View>

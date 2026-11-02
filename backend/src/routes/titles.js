@@ -20,12 +20,28 @@ const titleSchema = z.object({
     .positive("Runtime must be positive")
     .max(6000, "Runtime is unreasonably long")
     .optional(),
+  episodesWatched: z.coerce
+    .number()
+    .int("Episodes watched must be an integer")
+    .min(0, "Episodes watched cannot be negative")
+    .max(10000, "Episodes watched is unreasonably high")
+    .nullable()
+    .optional(),
   externalId: z.coerce.number().int().positive().optional(),
   imageUrl: z.string().url("Invalid image URL").optional()
 });
 
 function firstIssue(parsed) {
   return parsed.error.issues[0].message;
+}
+
+// Avsnitt finns bara för serier. En film sparas alltid utan avsnittsräknare,
+// även om appen råkar skicka med ett värde.
+function withEpisodeRule(data) {
+  if (data.kind === "movie") {
+    return { ...data, episodesWatched: null };
+  }
+  return data;
 }
 
 router.get("/", async (req, res, next) => {
@@ -75,7 +91,7 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: firstIssue(parsed) });
     }
     const title = await prisma.title.create({
-      data: { ...parsed.data, userId: req.userId }
+      data: { ...withEpisodeRule(parsed.data), userId: req.userId }
     });
     res.status(201).json({ title });
   } catch (err) {
@@ -117,7 +133,7 @@ router.put("/:id", async (req, res, next) => {
     }
     const title = await prisma.title.update({
       where: { id: existing.id },
-      data: parsed.data
+      data: withEpisodeRule(parsed.data)
     });
     res.json({ title });
   } catch (err) {

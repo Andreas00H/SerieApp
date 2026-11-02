@@ -31,6 +31,8 @@ Samma body som register. `200` → `{ "token": "...", "user": { "id": 1, "email"
 Titelfält: `name` (1–120 tecken, krävs), `kind` (`movie` | `series`, krävs),
 `status` (`unwatched` | `watching` | `watched`, default `unwatched`),
 `genre` (valfri, ≤60), `runtimeMinutes` (valfri, positivt heltal),
+`episodesWatched` (valfri, heltal 0–10000 eller `null` för att nollställa; sparas
+alltid som `null` för filmer),
 `externalId` + `imageUrl` (sätts av TVmaze-sök).
 
 ### GET /api/titles
@@ -40,7 +42,7 @@ Titelfält: `name` (1–120 tecken, krävs), `kind` (`movie` | `series`, krävs)
 ### POST /api/titles
 
 ```json
-{ "name": "Breaking Bad", "kind": "series", "genre": "Drama", "status": "unwatched", "runtimeMinutes": 45, "externalId": 169, "imageUrl": "https://..." }
+{ "name": "Breaking Bad", "kind": "series", "genre": "Drama", "status": "watching", "runtimeMinutes": 45, "episodesWatched": 12, "externalId": 169, "imageUrl": "https://..." }
 ```
 
 `201` → `{ "title": { ... } }` · `400` valideringsfel

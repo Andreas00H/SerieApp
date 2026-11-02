@@ -82,6 +82,7 @@ export default function TitleDetailScreen() {
         status,
         genre: title.genre ?? undefined,
         runtimeMinutes: title.runtimeMinutes ?? undefined,
+        episodesWatched: title.episodesWatched,
         externalId: title.externalId ?? undefined,
         imageUrl: title.imageUrl ?? undefined
       });
@@ -89,6 +90,32 @@ export default function TitleDetailScreen() {
       flash(`Status changed to ${statusLabels[status].toLowerCase()}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not update status");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // +1 avsnitt: räknar upp och sparar direkt. Har man inte börjat än
+  // sätts statusen samtidigt till "Watching".
+  async function addEpisode() {
+    if (!token || !title) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const data = await api.updateTitle(token, title.id, {
+        name: title.name,
+        kind: title.kind,
+        status: title.status === "unwatched" ? "watching" : title.status,
+        genre: title.genre ?? undefined,
+        runtimeMinutes: title.runtimeMinutes ?? undefined,
+        episodesWatched: (title.episodesWatched ?? 0) + 1,
+        externalId: title.externalId ?? undefined,
+        imageUrl: title.imageUrl ?? undefined
+      });
+      setTitle(data.title);
+      flash(`Episode ${data.title.episodesWatched} logged`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not update episodes");
     } finally {
       setSaving(false);
     }
@@ -206,6 +233,22 @@ export default function TitleDetailScreen() {
           />
         </View>
 
+        {title.kind === "series" ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Episodes</Text>
+            <View style={styles.episodeRow}>
+              <Text style={styles.episodeCount}>{title.episodesWatched ?? 0} watched</Text>
+              <Button
+                label="+1 episode"
+                variant="secondary"
+                onPress={addEpisode}
+                loading={saving}
+                style={styles.episodeButton}
+              />
+            </View>
+          </View>
+        ) : null}
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <View style={styles.actions}>
@@ -302,6 +345,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3
+  },
+  episodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12
+  },
+  episodeCount: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "700"
+  },
+  episodeButton: {
+    paddingHorizontal: 18
   },
   error: {
     color: colors.danger,

@@ -9,6 +9,7 @@ export type Title = {
   genre: string | null;
   status: TitleStatus;
   runtimeMinutes: number | null;
+  episodesWatched: number | null;
   externalId: number | null;
   imageUrl: string | null;
   createdAt: string;
@@ -36,6 +37,7 @@ export type TitleInput = {
   genre?: string;
   status: TitleStatus;
   runtimeMinutes?: number;
+  episodesWatched?: number | null;
   externalId?: number;
   imageUrl?: string;
 };
