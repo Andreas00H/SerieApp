@@ -133,7 +133,7 @@ export default function RandomScreen() {
 
         {result ? (
           <View style={styles.result}>
-            <Text style={styles.resultLabel}>TONIGHT'S PICK</Text>
+            <Text style={styles.resultLabel}>{"TONIGHT'S PICK"}</Text>
             <Poster name={result.name} imageUrl={result.imageUrl} width={130} />
             <Text style={styles.resultName}>{result.name}</Text>
             {meta ? <Text style={styles.resultMeta}>{meta}</Text> : null}
