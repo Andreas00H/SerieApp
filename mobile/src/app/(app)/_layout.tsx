@@ -13,12 +13,14 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: colors.bg },
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.text,
-        headerTitleStyle: { fontWeight: "700" }
+        headerTitleStyle: { fontWeight: "700" },
+        headerShadowVisible: false,
+        headerBackTitle: "Back"
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="titles/new" options={{ title: "New title", presentation: "modal" }} />
-      <Stack.Screen name="titles/[id]" options={{ title: "Details" }} />
+      <Stack.Screen name="titles/[id]" options={{ title: "" }} />
     </Stack>
   );
 }
