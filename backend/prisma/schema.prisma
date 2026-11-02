@@ -23,6 +23,7 @@ model Title {
   genre          String?
   status         String   @default("unwatched")
   runtimeMinutes Int?
+  episodesWatched Int?
   externalId     Int?
   imageUrl       String?
   createdAt      DateTime @default(now())
