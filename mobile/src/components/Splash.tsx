@@ -1,11 +1,12 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { colors } from "../constants/theme";
+import Logo from "./Logo";
 
 export default function Splash() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>SerieApp</Text>
-      <ActivityIndicator size="large" color={colors.accent} />
+      <Logo />
+      <ActivityIndicator color={colors.accent} />
     </View>
   );
 }
@@ -16,12 +17,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
     alignItems: "center",
     justifyContent: "center",
-    gap: 16
-  },
-  title: {
-    color: colors.text,
-    fontSize: 32,
-    fontWeight: "800",
-    letterSpacing: 1
+    gap: 28
   }
 });
