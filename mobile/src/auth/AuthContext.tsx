@@ -1,4 +1,4 @@
-import * as SecureStore from "expo-secure-store";
+import { tokenStorage } from "./tokenStorage";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api, ApiError, setUnauthorizedHandler } from "../api/client";
@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const saved = await SecureStore.getItemAsync(TOKEN_KEY);
+        const saved = await tokenStorage.get(TOKEN_KEY);
         if (saved) {
           try {
             const data = await api.me(saved);
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(data.user);
           } catch (err) {
             if (err instanceof ApiError && err.status === 401) {
-              await SecureStore.deleteItemAsync(TOKEN_KEY);
+              await tokenStorage.remove(TOKEN_KEY);
               setSessionExpired(true);
             } else {
               setToken(saved);
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      void SecureStore.deleteItemAsync(TOKEN_KEY);
+      void tokenStorage.remove(TOKEN_KEY);
       setToken(null);
       setUser(null);
       setSessionExpired(true);
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionExpired,
       signIn: async (email, password) => {
         const data = await api.login(email, password);
-        await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+        await tokenStorage.set(TOKEN_KEY, data.token);
         setSessionExpired(false);
         setToken(data.token);
         setUser(data.user);
@@ -74,13 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp: async (email, password) => {
         await api.register(email, password);
         const data = await api.login(email, password);
-        await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+        await tokenStorage.set(TOKEN_KEY, data.token);
         setSessionExpired(false);
         setToken(data.token);
         setUser(data.user);
       },
       signOut: async () => {
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        await tokenStorage.remove(TOKEN_KEY);
         setSessionExpired(false);
         setToken(null);
         setUser(null);

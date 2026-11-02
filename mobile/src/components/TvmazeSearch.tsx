@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 12
+    borderRadius: 16,
+    padding: 14
   },
   heading: {
     color: colors.text,
