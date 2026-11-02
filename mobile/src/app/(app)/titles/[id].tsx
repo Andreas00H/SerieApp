@@ -83,6 +83,31 @@ export default function TitleDetailScreen() {
     }
   }
 
+  // +1 avsnitt: räknar upp och sparar direkt. Har man inte börjat än
+  // sätts statusen samtidigt till "Watching".
+  async function addEpisode() {
+    if (!token || !title) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const data = await api.updateTitle(token, title.id, {
+        name: title.name,
+        kind: title.kind,
+        status: title.status === "unwatched" ? "watching" : title.status,
+        genre: title.genre ?? undefined,
+        runtimeMinutes: title.runtimeMinutes ?? undefined,
+        episodesWatched: (title.episodesWatched ?? 0) + 1,
+        externalId: title.externalId ?? undefined,
+        imageUrl: title.imageUrl ?? undefined
+      });
+      setTitle(data.title);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not update episodes");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function saveEdit(input: TitleInput) {
     if (!token || !title) return;
     setSaving(true);
@@ -166,9 +191,6 @@ export default function TitleDetailScreen() {
             {title.genre ? ` · ${title.genre}` : ""}
             {title.runtimeMinutes ? ` · ${title.runtimeMinutes} min` : ""}
           </Text>
-          {title.kind === "series" && title.episodesWatched != null ? (
-            <Text style={styles.episodes}>{title.episodesWatched} episodes watched</Text>
-          ) : null}
           {title.externalId ? (
             <Text style={styles.tvmaze}>TVmaze id {title.externalId}</Text>
           ) : null}
@@ -195,6 +217,22 @@ export default function TitleDetailScreen() {
           ))}
         </View>
       </View>
+
+      {title.kind === "series" ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Episodes</Text>
+          <View style={styles.episodeRow}>
+            <Text style={styles.episodeCount}>{title.episodesWatched ?? 0} watched</Text>
+            <Button
+              label="+1 episode"
+              variant="secondary"
+              onPress={addEpisode}
+              loading={saving}
+              style={styles.episodeButton}
+            />
+          </View>
+        </View>
+      ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -237,11 +275,6 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 15
   },
-  episodes: {
-    color: colors.blue,
-    fontSize: 14,
-    fontWeight: "600"
-  },
   tvmaze: {
     color: colors.muted,
     fontSize: 12
@@ -279,6 +312,20 @@ const styles = StyleSheet.create({
   },
   statusChoiceTextActive: {
     fontWeight: "800"
+  },
+  episodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  episodeCount: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600"
+  },
+  episodeButton: {
+    paddingHorizontal: 18
   },
   error: {
     color: colors.danger,
