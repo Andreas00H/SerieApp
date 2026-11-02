@@ -48,8 +48,8 @@ pushnotiser.
 
 - `user`: e-post, bcrypt-hashat lösenord
 - `title`: namn, typ (movie/series), genre, status
-  (unwatched/watching/watched), speltid i minuter, TVmaze-id (valfritt),
-  bildadress (valfritt)
+  (unwatched/watching/watched), speltid i minuter, antal sedda avsnitt
+  (bara serier), TVmaze-id (valfritt), bildadress (valfritt)
 
 ### Teknik, hosting och arbetsfördelning
 
