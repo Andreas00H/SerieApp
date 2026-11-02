@@ -173,7 +173,7 @@ export default function TitleDetailScreen() {
     return <StateView kind="error" message={error ?? undefined} onRetry={() => load()} />;
   }
 
-  if (editing) {
+  if (editing && title) {
     return (
       <KeyboardAvoidingView
         style={styles.flex}
@@ -183,6 +183,7 @@ export default function TitleDetailScreen() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.editHeading}>Edit</Text>
           <TitleForm
+            key={title.id}
             initial={title}
             submitting={saving}
             error={saveError}
