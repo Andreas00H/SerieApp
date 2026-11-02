@@ -36,17 +36,19 @@ async function request<T>(path: string, options: Options = {}): Promise<T> {
       body: body === undefined ? undefined : JSON.stringify(body)
     });
   } catch {
-    throw new ApiError("Ingen anslutning till servern", 0);
+    throw new ApiError("No connection to the server", 0);
   }
   let data: any = null;
   try {
     data = await res.json();
-  } catch {}
+  } catch {
+    data = null; // non-JSON response; surface the HTTP status below
+  }
   if (!res.ok) {
     if (res.status === 401 && token) {
       onUnauthorized?.();
     }
-    throw new ApiError(data?.error || `Fel ${res.status}`, res.status);
+    throw new ApiError(data?.error || `Error ${res.status}`, res.status);
   }
   return data as T;
 }
