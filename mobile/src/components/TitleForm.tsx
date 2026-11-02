@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { Title, TitleInput, TitleKind, TitleStatus, TvmazeResult } from "../api/types";
 import { colors, kindLabels, radius, statusColors, statusLabels } from "../constants/theme";
@@ -28,26 +28,17 @@ const STATUS_OPTIONS = (["unwatched", "watching", "watched"] as TitleStatus[]).m
 }));
 
 export default function TitleForm({ initial, submitting, error, submitLabel, onSubmit }: Props) {
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<TitleKind>("movie");
-  const [status, setStatus] = useState<TitleStatus>("unwatched");
-  const [genre, setGenre] = useState("");
-  const [runtime, setRuntime] = useState("");
-  const [episodes, setEpisodes] = useState("");
+  // State is seeded directly from props at mount; remount with a new key
+  // (call site) to reset the form for a different title.
+  const [name, setName] = useState(initial?.name ?? "");
+  const [kind, setKind] = useState<TitleKind>(initial?.kind ?? "movie");
+  const [status, setStatus] = useState<TitleStatus>(initial?.status ?? "unwatched");
+  const [genre, setGenre] = useState(initial?.genre ?? "");
+  const [runtime, setRuntime] = useState(initial?.runtimeMinutes ? String(initial.runtimeMinutes) : "");
+  const [episodes, setEpisodes] = useState(initial?.episodesWatched != null ? String(initial.episodesWatched) : "");
   const [picked, setPicked] = useState<TvmazeResult | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [invalidField, setInvalidField] = useState<"name" | "runtime" | "episodes" | null>(null);
-
-  useEffect(() => {
-    if (initial) {
-      setName(initial.name);
-      setKind(initial.kind);
-      setStatus(initial.status);
-      setGenre(initial.genre ?? "");
-      setRuntime(initial.runtimeMinutes ? String(initial.runtimeMinutes) : "");
-      setEpisodes(initial.episodesWatched != null ? String(initial.episodesWatched) : "");
-    }
-  }, [initial]);
 
   function pickFromTvmaze(result: TvmazeResult) {
     setPicked(result);
